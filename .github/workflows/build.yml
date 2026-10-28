@@ -61,6 +61,10 @@ jobs:
 
       # before-all / test-command / config-settings come from Pillow's
       # pyproject.toml [tool.cibuildwheel]; only the image is overridden.
+      # Pillow's test-requires pulls in numpy, which stopped publishing
+      # manylinux2014 wheels after 2.2.x; building it from source fails on the
+      # image's GCC 10.2. PIP_ONLY_BINARY makes pip fall back to the newest
+      # numpy with a glibc 2.17 wheel (2.2.6, which covers cp310-cp313).
       - name: Build wheels
         working-directory: pillow
         run: python -m cibuildwheel --output-dir ../wheelhouse
@@ -69,6 +73,7 @@ jobs:
           CIBW_ARCHS: x86_64
           CIBW_BUILD: ${{ inputs.build }}
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_ENVIRONMENT_LINUX: PIP_ONLY_BINARY=numpy
           CIBW_ENVIRONMENT_PASS_LINUX: FORCE_COLOR
 
       - name: Verify wheel tags are glibc 2.17
