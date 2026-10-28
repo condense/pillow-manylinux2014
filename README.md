@@ -47,6 +47,10 @@ The wheel is specific to the CPython minor version in its tag. If the deploy's
   libjpeg-turbo's executable link flags (3.2+ bundles libspng for its CLI
   tools, whose static link fails on glibc 2.17 without it). If a future
   release changes that file the patch will stop applying; regenerate it.
+- **numpy for the test suite** is restricted to binary wheels
+  (`PIP_ONLY_BINARY=numpy`), which resolves to 2.2.6, the last numpy with
+  manylinux2014 wheels; newer numpy can't build with CentOS 7's GCC. It has
+  no cp314 wheel, so a cp314 build needs that test dependency dropped.
 - **This buys time, not a future.** The manylinux2014 image is EOL (still
   published as of Oct 2026), and upstream dependencies will eventually need a
   newer toolchain than CentOS 7 has — 12.x already special-cased zlib-ng on
