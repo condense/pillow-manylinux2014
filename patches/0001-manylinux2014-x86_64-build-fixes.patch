@@ -1,0 +1,43 @@
+diff --git a/.github/workflows/wheels-dependencies.sh b/.github/workflows/wheels-dependencies.sh
+index 625e54c..789bb18 100755
+--- a/.github/workflows/wheels-dependencies.sh
++++ b/.github/workflows/wheels-dependencies.sh
+@@ -180,6 +180,7 @@ function build_libavif {
+         build_simple nasm 3.02 https://www.nasm.us/pub/nasm/releasebuilds/3.02
+     fi
+ 
++    local build_type=MinSizeRel
+     local build_shared=ON
+     local lto=ON
+ 
+@@ -196,6 +197,9 @@ function build_libavif {
+             build_shared=OFF
+         fi
+     else
++        if [[ "$MB_ML_VER" == 2014 ]] && [[ "$PLAT" == "x86_64" ]]; then
++            build_type=Release
++        fi
+         libavif_cmake_flags=(-DCMAKE_SHARED_LINKER_FLAGS_INIT="-Wl,--strip-all,-z,relro,-z,now")
+     fi
+     if [[ -n "$IOS_SDK" ]] && [[ "$PLAT" == "x86_64" ]]; then
+@@ -224,7 +228,7 @@ function build_libavif {
+             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=$lto \
+             -DCMAKE_C_VISIBILITY_PRESET=hidden \
+             -DCMAKE_CXX_VISIBILITY_PRESET=hidden \
+-            -DCMAKE_BUILD_TYPE=MinSizeRel \
++            -DCMAKE_BUILD_TYPE=$build_type \
+             "${libavif_cmake_flags[@]}" \
+             $HOST_CMAKE_FLAGS . )
+ 
+@@ -270,6 +274,11 @@ function build {
+     build_simple libxcb $LIBXCB_VERSION https://www.x.org/releases/individual/lib
+ 
+     # -DCMAKE_POSITION_INDEPENDENT_CODE=1 is a workaround from https://github.com/libjpeg-turbo/libjpeg-turbo/issues/898
++    # manylinux2014 (glibc 2.17): libjpeg-turbo >= 3.2 bundles libspng for its
++    # command-line tools, whose static link needs libm spelled out explicitly.
++    if [[ "$MB_ML_VER" == 2014 ]] && [[ "$PLAT" == "x86_64" ]]; then
++        HOST_CMAKE_FLAGS="-DCMAKE_EXE_LINKER_FLAGS=-lm $HOST_CMAKE_FLAGS"
++    fi
+     HOST_CMAKE_FLAGS="-DCMAKE_POSITION_INDEPENDENT_CODE=1 $HOST_CMAKE_FLAGS" build_libjpeg_turbo
+ 
+     if [[ -n "$IS_MACOS" ]]; then
